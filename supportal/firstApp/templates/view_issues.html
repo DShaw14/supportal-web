@@ -1,0 +1,30 @@
+<!-- DOCTYPE html -->
+<html>
+	{% extends 'base.html' %}
+	{% block content %}
+	<div class="standard">
+	<body>
+	{% if user.is_authenticated %}
+		<h1>Current Issues</h1>
+		{% for issue in issue_title %}
+		{{ issue }}</br>
+		{% endfor %}
+		{% for issue in issue_content %}
+		{{ issue }}</br>
+		{% endfor %}
+
+		<!-- {% for obj in Issue_list %}
+
+			{{ obj.title }}</br>
+			{{ obj.description }}</br>
+			{{ obj.timestamp }}</br>
+			</br>
+
+		{% endfor %} -->
+		<button type="button"><a href="/supportal/main">Back to Main Menu</a></button></br>
+		</br>
+	{% endif %}
+	</body>
+	</div>
+	{% endblock %}
+</html>

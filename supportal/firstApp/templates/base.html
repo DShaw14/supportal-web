@@ -1,0 +1,21 @@
+{% load staticfiles %}
+<html>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<div class="page-header">
+	<head><link rel="stylesheet" href="{% static 'css/supportal.css' %}"><h4>Oak Labs</h4><h2>Supportal</h2>
+	{% if request.user.is_authenticated %}
+	<div align='right'>
+		<h4><a href="/supportal/logout">Logout</a></h4>
+		</div>
+	{% endif %}
+		</head>
+	</div>
+	<body>
+		{% block content %} {% endblock %}
+		{% if request.user.is_superuser %}
+		<div class="admin" align="right">
+		<button><a href="/admin/">Admin Panel</a></button>
+		</div>
+		{% endif %}
+	</body>
+</html>

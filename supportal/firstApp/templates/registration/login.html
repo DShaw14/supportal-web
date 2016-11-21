@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+  <center>
+  <h1><link href="https://fonts.googleapis.com/css?family=Oswald" rel="stylesheet">Login</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Login</button>
+  </form>
+  <button type="button"><a href="/supportal/newuser">Create New Account</a></button>
+  <button type="button"><a href="/supportal/password/reset/">Forgot Password?</a></button>
+  </center>
+{% endblock %}

@@ -1,0 +1,21 @@
+<html>
+	{% extends 'base.html' %}
+	{% block content %}
+	<div class="standard">
+	<body>
+		<h1>Create Issue</h1>
+		<form method="post">
+			{% csrf_token %}
+			{{ form.as_p }}
+			<br></br>
+			<!--<div id=urlToVisit>
+				<p>{{ r }}</p>
+			</div>-->
+			<button type='submit'>Submit issue</button>
+		</form>
+	</body>
+	</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js">
+	</script>
+	{% endblock %}
+</html>

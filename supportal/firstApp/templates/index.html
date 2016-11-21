@@ -1,0 +1,24 @@
+<!-- DOCTYPE html -->
+<html>
+	{% extends 'base.html' %}
+	{% block content %}
+	<body>
+	<center>
+	{% if user.is_authenticated %}
+		<h1>Hello, {{ request.user.username }}!</h1>
+		{% for obj in Issue_list %}
+
+			{{ obj.title }}</br>
+			{{ obj.description }}</br>
+			{{ obj.timestamp }}</br>
+			</br>
+
+		{% endfor %}
+		<button type="button"><a href="/supportal/create">Submit a new Issue</a></button></br>
+		</br>
+		<button type="button"><a href="/supportal/viewIssues">View current Issues</a></button></br>
+	{% endif %}
+	<center>
+	</body>
+	{% endblock %}
+</html>
