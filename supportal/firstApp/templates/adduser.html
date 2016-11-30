@@ -6,11 +6,38 @@
 	<body>
 		<div class="standard">
 		<h1>Create a New User</h1>
+		<hr />
 		<p>All information must be filled out before submitting.</p>
+
 		<form method="post" action="">
     		{% csrf_token %}
-    		{{ form.as_p }}
-    		<!-- <input type="submit" value="Create new user account" /> -->
+    		{{ form.non_field_errors }}
+    		<div class="fieldWrapper">
+    			{{ form.username.errors }}
+    				<label for="{{ form.username.id_for_label }}">Username:</label>
+    			{{ form.username }}
+    		</div>
+    		<div class="fieldWrapper">
+    			{{ form.first_name.errors }}
+    				<label for="{{ form.first_name.id_for_label }}">First Name:</label>
+    			{{ form.first_name }}
+    		</div>
+    		<div class="fieldWrapper">
+    			{{ form.last_name.errors }}
+    				<label for="{{ form.last_name.id_for_label }}">Last Name:</label>
+    			{{ form.last_name }}
+    		</div>
+    		<div class="fieldWrapper">
+    			{{ form.email.errors }}
+    				<label for="{{ form.email.id_for_label }}">Email Address:</label>
+    			{{ form.email }}
+    		</div>
+    		<div class="fieldWrapper">
+    			{{ form.password.errors }}
+    				<label type="password" for="{{ form.password.id_for_label }}">Password:</label>
+    			{{ form.password }}
+    		</div>
+
     		<button type="submit">Create Account</button>
     		<br></br>
     		<button><a href="/supportal/">Return to login</a></button>

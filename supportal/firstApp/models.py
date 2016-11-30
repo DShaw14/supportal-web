@@ -13,7 +13,6 @@ class Issue(models.Model):
 	createdBy = models.ForeignKey(User)
 	highPriority = models.BooleanField(default=False)
 	kind = models.CharField(help_text="What kind of issue is this?", max_length=25, choices=kinds, default='bug')
-	authorization = models.CharField(help_text="Copy and paste the authorization url you received", max_length=300, default='https://bitbucket.org/auth')
 
 	def __unicode__(self):
 		return self.title

@@ -5,15 +5,16 @@ from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required 
 from django.contrib.auth import logout
 from .models import Issue, baseUser, Developer
-from .forms import IssueForm, UserForm
+from .forms import IssueForm, UserForm, updateUserForm, deleteForm
 from django.core import mail
-from oauthlib.oauth2 import BackendApplicationClient
-from requests_oauthlib import OAuth2Session
+from bitbucket.bitbucket import Bitbucket
+#from oauthlib.oauth2 import BackendApplicationClient
+#from requests_oauthlib import OAuth2Session
 import datetime
 import requests
 import json
 import time
-# Create your views here.
+import logging
 
 bucket_url = 'https://api.bitbucket.org/1.0/repositories/shawdl/supportal2016test/issues'
 slack_url = 'https://hooks.slack.com/services/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'
@@ -23,7 +24,7 @@ redirect_uri = 'https://localhost/supportal'
 auth_uri = "https://bitbucket.org/site/oauth2/authorize"
 token_uri = "https://bitbucket.org/site/oauth2/access_token"
 
-#Login page, uses index.html as template
+#Login page, uses index.html as template and django built in login
 def login(request):
 	context = {
 		"title": "Login"
@@ -59,80 +60,114 @@ def newUser(request):
 #*****Need to fix, tries to make new user instead of updating user*****
 @login_required
 def updateProfile(request):
-	args = {}
-
+	getUser = request.user
+	if not request.user.is_superuser:
+		getbaseUser = baseUser.objects.get(user=getUser)
 	if request.method == 'POST':
-		form = UpdateProfile(request.POST, instance=request.user)
-		form.actual_user = request.user
+		form = updateUserForm(request.POST, instance=request.user)
 		if form.is_valid():
-			form.save()
-			return HttpResponseRedirect(reverse('update_profile_success'))
+			user = form.save(commit=False)
+			user.save()
+			return HttpResponseRedirect("/supportal/main")
 	else:
-		form = UpdateProfile()
+		form = updateUserForm()
 
-	args['form'] = form
-	return render(request, 'edit_profile.html', args)
+	if not request.user.is_superuser:
+		context = {
+			"form": form,
+			"current_first": getUser.first_name,
+			"current_last": getUser.last_name,
+			"current_email":getUser.email,
+			"hours_avail": getbaseUser.time_available,
+		}
+	else:
+		context = {
+			"form": form,
+			"current_first": getUser.first_name,
+			"current_last": getUser.last_name,
+			"current_email":getUser.email,
+		}
+	return render(request, 'update_profile.html', context)
 
 #Main page that is currently used as a list of a all issues in the database
 @login_required
 def mainPage(request):
-	queryset = Issue.objects.all()
-	#queryset = Developer.objects.all()
-
 	context = {
-		"Issue_list": queryset,
 		"title": "Main"
 	}
 	return render(request, "index.html", context)
 
-#View issues, currently gets all issues from a singular repository and displays as plaintext
+#View issues, currently gets all issues from a singular repository and displays as a formatted table
 @login_required
 def viewIssues(request):
 	#lists for issue titles and content
+	bucket_id = []
 	bucket_titles = []
 	bucket_content = []
+	bucket_kind = []
+	bucket_priority = []
 	#call api to get initial repository and find number of issues in said repository
-	r = requests.get('https://api.bitbucket.org/1.0/repositories/shawdl/supportal2016test/issues/')
+	r = requests.get(bucket_url)
 	bucket_json = r.json()
 	issue_count = bucket_json['count']
 
-	x = 1
+	if request.method == "POST":
+		form = deleteForm(request.POST)
+
+		if form.is_valid():
+			bb = Bitbucket('shawdl', 'TF2MarsVolta', repo_name_or_slug="supportal2016test")
+			success, result = bb.issue.delete(issue_id=form.cleaned_data['id_to_be_deleted'])
+	else:
+		form = deleteForm()
+
+	x = 1 #issue counter
+	y = x #id counter
 	while x <= issue_count:
 		#get each individual issue by id
-		r2 = requests.get('https://api.bitbucket.org/1.0/repositories/shawdl/supportal2016test/issues/' + str(x))
-		bucket_issues = r2.json()
-		#store converted issue titles and content in the appropriate lists
-		bucket_titles.append(bucket_issues['title'])
-		bucket_content.append(bucket_issues['content'])
-		x += 1
+		r2 = requests.get('https://api.bitbucket.org/1.0/repositories/shawdl/supportal2016test/issues/' + str(y))
+		if r2.text == "Not Found":
+			#y is necessary because x = count only counts the number of issues, meaning that it will not reach an id of 7
+			#with a count of 3. Thus, y helps us reach the other ids
+			y += 1
+		else:
+			bucket_issues = r2.json()
+			print(r2.status_code)
+			print(r2.text)
+		#store converted issue titles and content in the appropriate lists, only if the issues have a status of open
+			if bucket_issues['status'] != "closed":
+				bucket_id.append(bucket_issues['local_id'])
+				bucket_titles.append(bucket_issues['title'])
+				bucket_content.append(bucket_issues['content'])
+				bucket_kind.append(bucket_issues['metadata']['kind'])
+				bucket_priority.append(bucket_issues['priority'])
+		#Move to next issue
+			x += 1
+			y += 1
 
+	zipped_data = zip(bucket_id, bucket_titles, bucket_content, bucket_kind, bucket_priority)
 	#pass the lists to the template
-	context = {
-		"issue_title": bucket_titles,
-		"issue_content": bucket_content,
-		"title": "View Issues",
-	}
+	if request.user.is_superuser:
+		context = {
+			"zipped_data": zipped_data,
+			"title": "View Issues",
+			"bucket_url": bucket_url,
+			"form": form
+		}
+	else:
+		context = {
+			"zipped_data": zipped_data,
+			"title": "View Issues",
+			"bucket_url": bucket_url
+		}
+
 	return render(request, "view_issues.html", context)
 
-#Create issue form page to create an issue, currently does not actually create issues
-#Issues are not sent to BitBucket, problem with authentication
+#CREATES ISSUES MOTHERFUCKER WE IN THIS
 @login_required
 def createIssue(request):
-	#retrieve client info for BitBucket auth
-
-	#BackendApplicationClient method
-	#client = BackendApplicationClient(client_id=client_id)
-	#oauth = OAuth2Session(client=client)
-	#token = oauth.fetch_token(token_url=token_uri, client_id=client_id, client_secret=client_secret)
-
-	#WebApplicationClient method
-	# bitbucket = OAuth2Session(client_id)
-	# auth_url = bitbucket.authorization_url(auth_uri)
-
 	if request.method == "POST":
 		getUser = request.user
 		form = IssueForm(request.POST)
-		# form.authorization = auth_url
 
 		if form.is_valid():
 			priority = "minor"
@@ -140,7 +175,6 @@ def createIssue(request):
 			title = form.cleaned_data['title']
 			kind = form.cleaned_data['kind']
 			content = form.cleaned_data['description']
-			#authorization = form.cleaned_data['authorization']
 
 			if issue.highPriority:
 				current_time = datetime.datetime.now().time()
@@ -164,39 +198,27 @@ def createIssue(request):
 
 				r = requests.post(slack_url, json=slack_payload)
 
-			#JSON payload to send to bitbucket with issue
-			payload = {
-				"priority": priority,
-				"title": title,
-				"kind": kind,
-				"content": content,
-				"created_on": issue.timestamp,
-				"reported_by":{
-					"username": str(getUser),
-				}
-			}
+			bb = Bitbucket('shawdl', 'TF2MarsVolta', repo_name_or_slug="supportal2016test")
+			success, result = bb.issue.create(
+				title=u''+title,
+				content=u''+content,
+				priority=u''+priority,
+				responsible=bb.username,
+				status=u'new',
+				kind=u''+kind)
 
-			# Try to fetch token, however state changes when form is submitted
-			# bitbucket.fetch_token(
-			# 	token_uri,
-			# 	authorization_response=authorization,
-			# 	client_id=client_id,
-			# 	client_secret=client_secret)
-
-			# r = bitbucket.post(bucket_url, json=payload)
-
-			return HttpResponseRedirect("/supportal/main")
 	else:
 		form = IssueForm()
 
-	context = {
+	if request.user.is_superuser:
+		context = {
 			"form": form,
-			#"authUrl": r,
+		}
+
+	else:
+		context = {
+			"form": form,
+			"hours_avail": baseUser.objects.get(user=request.user).time_available,
 		}
 
 	return render(request, "issue_form.html", context)
-
-#Delete issues is empty, to be used to close / delete issues
-@login_required
-def deleteIssues(request):
-	return HttpResponse("<h1>Delete Issues</h1>")

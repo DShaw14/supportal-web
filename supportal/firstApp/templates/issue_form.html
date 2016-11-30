@@ -1,21 +1,28 @@
 <html>
 	{% extends 'base.html' %}
 	{% block content %}
+	{% if hours_avail > 0 or request.user.is_superuser %}
 	<div class="standard">
 	<body>
 		<h1>Create Issue</h1>
+		<hr />
 		<form method="post">
 			{% csrf_token %}
+			<div class="form-group">
 			{{ form.as_p }}
-			<br></br>
-			<!--<div id=urlToVisit>
-				<p>{{ r }}</p>
-			</div>-->
-			<button type='submit'>Submit issue</button>
+			</div>
+			<button type='submit'>Submit issue</button><br /><br /><button type="button"><a href="/supportal/main">Back to Main Menu</a></button>
 		</form>
 	</body>
 	</div>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js">
 	</script>
+	{% else %}
+	<div class="standard">
+	<h2>No time available</h2><hr />
+	<p>You have no time available for requests. Contact Oak Labs for more information.</p><br />
+	<button type="button"><a href="/supportal/main">Back to Main Menu</a></button>
+	</div>
+	{% endif %}
 	{% endblock %}
 </html>

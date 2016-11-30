@@ -3,22 +3,20 @@
 	{% extends 'base.html' %}
 	{% block content %}
 	<body>
-	<center>
+	<div class='standard'>
 	{% if user.is_authenticated %}
-		<h1>Hello, {{ request.user.username }}!</h1>
-		{% for obj in Issue_list %}
-
-			{{ obj.title }}</br>
-			{{ obj.description }}</br>
-			{{ obj.timestamp }}</br>
-			</br>
-
-		{% endfor %}
-		<button type="button"><a href="/supportal/create">Submit a new Issue</a></button></br>
+		<center>
+		<h1>Hello, {{ request.user.first_name }}!</h1>
+		<hr />
+		</div>
+		<form action="/supportal/create">
+		<input type="submit" class="btn btn-primary btn-lg btn-block" value="Create Issue" />
+		</form>
 		</br>
-		<button type="button"><a href="/supportal/viewIssues">View current Issues</a></button></br>
+		<form action="/supportal/viewIssues">
+		<input type="submit" class="btn btn-primary btn-lg btn-block" value="View Current Issues" />
+		</form>
 	{% endif %}
-	<center>
 	</body>
 	{% endblock %}
 </html>

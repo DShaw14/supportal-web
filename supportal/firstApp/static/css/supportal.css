@@ -9,14 +9,32 @@
 	padding-left: 20px;
 }
 
-.page-header h2 {
-	font-family: 'Montserrat', sans-serif;
-}
-
 .page-header a {
 	color: #ffffff;
 }
 
+.page-header img {
+	float: left;
+}
+
 .admin {
 	padding: 20px 20px 20px 20px;
+}
+
+.btn-block {
+	padding: 20px 0px 0px 20px;
+}
+
+.btn-primary {
+	color: #445377;
+}
+
+.divider{
+    width:5px;
+    height:auto;
+    display:inline-block;
+}
+
+.highlight { 
+	background-color: #a9a9a9; 
 }

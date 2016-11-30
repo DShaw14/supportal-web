@@ -1,28 +1,49 @@
 <!-- DOCTYPE html -->
 <html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 	{% extends 'base.html' %}
 	{% block content %}
 	<div class="standard">
+	<head></head>
 	<body>
 	{% if user.is_authenticated %}
 		<h1>Current Issues</h1>
-		{% for issue in issue_title %}
-		{{ issue }}</br>
+		<table id="issueTable" class="table table-responsive">
+		<thead>
+		<tr id="notClickable">
+			<td><b><u><h4>ID</h4></u></b></td>
+			<td><b><u><h4>Title</h4></u></b></td>
+			<td><b><u><h4>Content</h4></u></b></td>
+			<td><b><u><h4>Kind</h4></u></b></td>
+			<td><b><u><h4>Priority</h4></u></b></td>
+		</tr>
+		<thead>
+		<tbody>
+		{% for i, j, k, l, m in zipped_data %}
+		<tr id="clickable">
+			<td><b><h4>{{ i }}</h4></b></td>
+			<td>{{ j }}</td>
+			<td>{{ k }}</td>
+			<td>{{ l }}</td>
+			<td>{{ m }}</td>
+		</tr>
 		{% endfor %}
-		{% for issue in issue_content %}
-		{{ issue }}</br>
-		{% endfor %}
+		</tbody>
+		</table>
 
-		<!-- {% for obj in Issue_list %}
-
-			{{ obj.title }}</br>
-			{{ obj.description }}</br>
-			{{ obj.timestamp }}</br>
-			</br>
-
-		{% endfor %} -->
+		{% if request.user.is_superuser %}
+		<form method='post'>
+			{% csrf_token %}
+			{{ form.as_p }}<br />
+			<button type="submit">Delete selected issue</button><br />
+			<br />
+		</form>
+		{% endif %}
 		<button type="button"><a href="/supportal/main">Back to Main Menu</a></button></br>
 		</br>
+		<script>
+			
+		</script>
 	{% endif %}
 	</body>
 	</div>

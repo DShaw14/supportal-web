@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'rest_auth',
 ]
 
 MIDDLEWARE = [
@@ -100,6 +103,17 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    ),
+}
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
@@ -107,12 +121,16 @@ LOGIN_URL = '/supportal/'
 
 LOGIN_REDIRECT_URL = '/supportal/main/'
 
+ACCOUNT_LOGOUT_ON_GET = True
+
+STATIC_URL = '/static/'
+
 EMAIL_HOST = 'smtp.gmail.com' #Runs on Google smtp api
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'supportal@gmail.com' #Host that the emails are sent from
+EMAIL_HOST_USER = 'supportal@oaklabs.io' #Host that the emails are sent from
 EMAIL_HOST_PASSWORD = 'passwordgoeshere' #Host's password
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'supportal@oaklabs.io' #Default from email if not logged in gmail
+DEFAULT_FROM_EMAIL = 'supportal@oaklabs.io' #Default address email is sent from
 
 LANGUAGE_CODE = 'en-us'
 

@@ -14,7 +14,6 @@ class IssueForm(forms.ModelForm):
 			"kind",
 			"description",
 			"highPriority",
-			"authorization",
 		]
 
 class UserForm(forms.ModelForm):
@@ -27,3 +26,20 @@ class UserForm(forms.ModelForm):
 			"email",
 			"password",
 		]
+
+class updateUserForm(forms.ModelForm):
+
+	first_name = forms.CharField(label="First Name:", required=True, max_length=30)
+	last_name = forms.CharField(label="Last Name:", required=True, max_length=30)
+	email = forms.EmailField(label="Email:", required=True)
+
+	class Meta:
+		model = User
+		fields = [
+			"first_name",
+			"last_name",
+			"email"
+		]
+
+class deleteForm(forms.Form):
+	id_to_be_deleted = forms.IntegerField(label="ID of issue to delete:")		

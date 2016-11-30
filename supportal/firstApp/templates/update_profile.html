@@ -1,0 +1,35 @@
+<!-- DOCTYPE html -->
+{% extends 'base.html' %}
+<html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+{% block content %}
+<body>
+<div class='standard'>
+<h2>Account Information</h2><hr/>
+{% if request.user.is_superuser %}
+<h4>Status: Developer / Admin </h4>
+{% else %}
+<h4>Status: User</h4>
+{% endif %}
+<h4>
+<br />
+First name: {{ current_first }}<br /><br />
+Last name: {{ current_last }}<br /><br />
+Email: {{ current_email }}<br /><br />
+{% if not request.user.is_superuser %}
+<span title="Current hours available for Oaklabs to work on your requests">Time available: {{ hours_avail }} <small>(?)</small><br /><br /></span>
+{% endif %}
+<h2>Update Account Information</h2>
+<hr />
+<form onsubmit="return alert('Your information has been updated!');" id='submit' method="post">
+	{% csrf_token %}
+    {{ form.as_p }}
+    <br />
+    <button id="updateInfo" type="submit">Update Information</button><br/><br/><button><a href="/supportal/main">Return to main menu</a></button>
+    <script>
+    </script>
+</form>
+</div>
+</body>
+{% endblock %}
+</html>
