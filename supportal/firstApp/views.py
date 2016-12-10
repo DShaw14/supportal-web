@@ -8,8 +8,6 @@ from .models import Issue, baseUser, Developer
 from .forms import IssueForm, UserForm, updateUserForm, deleteForm
 from django.core import mail
 from bitbucket.bitbucket import Bitbucket
-#from oauthlib.oauth2 import BackendApplicationClient
-#from requests_oauthlib import OAuth2Session
 import datetime
 import requests
 import json
