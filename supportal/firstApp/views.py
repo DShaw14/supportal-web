@@ -40,15 +40,16 @@ def newUser(request):
 	if request.method == "POST":
 		form = UserForm(request.POST)
 		if form.is_valid():
-			g = Group.objects.get(name='Users')
 			new_user = User.objects.create_user(**form.cleaned_data)
-			g.user_set.add(new_user)
-			mail.send_mail(
-				'Oak Labs - Supportal: Account ' + str(new_user.username) + ' has been created',
-				'Your account with Supportal has been created. Thank you.',
-				'supportal@oaklabs.io',
-				[str(new_user.email)],
-			)
+			new_user.save()
+
+			#MUST SETUP EMAIL SERVICE TO USE
+			#mail.send_mail(
+			#	'Oak Labs - Supportal: Account ' + str(new_user.username) + ' has been created',
+			#	'Your account with Supportal has been created. Thank you.',
+			#	'supportal@oaklabs.io',
+			#	[str(new_user.email)],
+			#)
 			return HttpResponseRedirect("/supportal/")
 	else:
 		form = UserForm()
