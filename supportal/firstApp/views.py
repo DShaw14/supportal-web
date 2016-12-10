@@ -89,13 +89,14 @@ def updateProfile(request):
 		}
 	return render(request, 'update_profile.html', context)
 
-#Main page that is currently used as a list of a all issues in the database
+#Main page
 @login_required
 def mainPage(request):
 	context = {
 		"title": "Main"
 	}
 	return render(request, "index.html", context)
+
 
 #View issues, currently gets all issues from a singular repository and displays as a formatted table
 @login_required

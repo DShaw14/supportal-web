@@ -6,7 +6,7 @@
 	<body>
 		<h1>Create Issue</h1>
 		<hr />
-		<form method="post">
+		<form onsubmit="return alert('Issue has been created.');" method="post">
 			{% csrf_token %}
 			<div class="form-group">
 			{{ form.as_p }}
