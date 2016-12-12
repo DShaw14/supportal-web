@@ -16,11 +16,8 @@ import logging
 
 bucket_url = 'https://api.bitbucket.org/1.0/repositories/shawdl/supportal2016test/issues'
 slack_url = 'https://hooks.slack.com/services/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'
-client_id = 'djnug2AYYSwzudDYdj'
-client_secret = 'K42BdNv8WXAD5erXt8ZK9SEycH39mQ5u'
-redirect_uri = 'https://localhost/supportal'
-auth_uri = "https://bitbucket.org/site/oauth2/authorize"
-token_uri = "https://bitbucket.org/site/oauth2/access_token"
+bbUser = 'shawdl'
+bbPass = 'supportal2016'
 
 #Login page, uses index.html as template and django built in login
 def login(request):
@@ -44,12 +41,12 @@ def newUser(request):
 			new_user.save()
 
 			#MUST SETUP EMAIL SERVICE TO USE
-			#mail.send_mail(
-			#	'Oak Labs - Supportal: Account ' + str(new_user.username) + ' has been created',
-			#	'Your account with Supportal has been created. Thank you.',
-			#	'supportal@oaklabs.io',
-			#	[str(new_user.email)],
-			#)
+			mail.send_mail(
+				'Oak Labs - Supportal: Account ' + str(new_user.username) + ' has been created',
+				'Your account with Supportal has been created. Thank you.',
+				'supportal@oaklabs.io',
+				[str(new_user.email)],
+			)
 			return HttpResponseRedirect("/supportal/")
 	else:
 		form = UserForm()
@@ -115,7 +112,7 @@ def viewIssues(request):
 		form = deleteForm(request.POST)
 
 		if form.is_valid():
-			bb = Bitbucket('shawdl', 'TF2MarsVolta', repo_name_or_slug="supportal2016test")
+			bb = Bitbucket(bbUser, bbPass, repo_name_or_slug="supportal2016test")
 			success, result = bb.issue.delete(issue_id=form.cleaned_data['id_to_be_deleted'])
 	else:
 		form = deleteForm()
@@ -197,7 +194,7 @@ def createIssue(request):
 
 				r = requests.post(slack_url, json=slack_payload)
 
-			bb = Bitbucket('shawdl', 'supportal2016', repo_name_or_slug="supportal2016test")
+			bb = Bitbucket(bbUser, bbPass, repo_name_or_slug="supportal2016test")
 			success, result = bb.issue.create(
 				title=u''+title,
 				content=u''+content,

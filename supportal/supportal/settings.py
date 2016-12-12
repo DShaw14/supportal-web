@@ -135,8 +135,8 @@ STATIC_URL = '/static/'
 
 EMAIL_HOST = 'smtp.gmail.com' #Runs on Google smtp api
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'supportal@oaklabs.io' #Host that the emails are sent from
-EMAIL_HOST_PASSWORD = 'passwordgoeshere' #Host's password
+EMAIL_HOST_USER = 'oaktest2016@gmail.com' #Host that the emails are sent from
+EMAIL_HOST_PASSWORD = 'supportal2016' #Host's password
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'supportal@oaklabs.io' #Default address email is sent from
 
