@@ -39,6 +39,8 @@ def newUser(request):
 		if form.is_valid():
 			new_user = User.objects.create_user(**form.cleaned_data)
 			new_user.save()
+			new_base = baseUser.objects.create_user(**form.cleaned_data)
+			new_base.save()
 
 			#MUST SETUP EMAIL SERVICE TO USE
 			mail.send_mail(
