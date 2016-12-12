@@ -162,7 +162,6 @@ def viewIssues(request):
 
 	return render(request, "view_issues.html", context)
 
-#CREATES ISSUES MOTHERFUCKER WE IN THIS
 @login_required
 def createIssue(request):
 	if request.method == "POST":
@@ -198,7 +197,7 @@ def createIssue(request):
 
 				r = requests.post(slack_url, json=slack_payload)
 
-			bb = Bitbucket('shawdl', 'TF2MarsVolta', repo_name_or_slug="supportal2016test")
+			bb = Bitbucket('shawdl', 'supportal2016', repo_name_or_slug="supportal2016test")
 			success, result = bb.issue.create(
 				title=u''+title,
 				content=u''+content,

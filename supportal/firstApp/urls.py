@@ -17,5 +17,6 @@ urlpatterns = [
     url(r'^password/reset/(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/$', auth_views.password_reset_confirm, {'post_reset_redirect' : '/supportal/password/done/'}, name='password_reset_confirm'),
     url(r'^password/done/$', auth_views.password_reset_complete),
     url(r'^rest-auth/', include('rest_auth.urls')),
-    url(r'^api-token-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^rest-auth/', include('rest_auth.urls')),
+    url(r'^rest-auth/registration/', include('rest_auth.registration.urls'))
 ]

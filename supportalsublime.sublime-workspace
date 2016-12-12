@@ -68,14 +68,6 @@
 			}
 		},
 		{
-			"file": "supportal/supportal/urls.py",
-			"settings":
-			{
-				"buffer_size": 932,
-				"line_ending": "Unix"
-			}
-		},
-		{
 			"file": "supportal/firstApp/models.py",
 			"settings":
 			{
@@ -124,13 +116,10 @@
 			}
 		},
 		{
-			"contents": "from django.http import HttpResponse, HttpResponseRedirect\nfrom django.shortcuts import render, get_object_or_404, render_to_response, redirect\nfrom django.contrib import auth\nfrom django.contrib.auth.models import User, Group\nfrom django.contrib.auth.decorators import login_required \nfrom django.contrib.auth import logout\nfrom .models import Issue, baseUser, Developer\nfrom .forms import IssueForm, UserForm, updateUserForm, deleteForm\nfrom django.core import mail\nfrom bitbucket.bitbucket import Bitbucket\n#from oauthlib.oauth2 import BackendApplicationClient\n#from requests_oauthlib import OAuth2Session\nimport datetime\nimport requests\nimport json\nimport time\nimport logging\n\nbucket_url = 'https://api.bitbucket.org/1.0/repositories/shawdl/supportal2016test/issues'\nslack_url = 'https://hooks.slack.com/services/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'\nclient_id = 'djnug2AYYSwzudDYdj'\nclient_secret = 'K42BdNv8WXAD5erXt8ZK9SEycH39mQ5u'\nredirect_uri = 'https://localhost/supportal'\nauth_uri = \"https://bitbucket.org/site/oauth2/authorize\"\ntoken_uri = \"https://bitbucket.org/site/oauth2/access_token\"\n\n#Login page, uses index.html as template and django built in login\ndef login(request):\n	context = {\n		\"title\": \"Login\"\n	}\n	return render(request, \"index.html\", context)\n\n#Logout view logs out user and returns them to the login page, should implement a message if possible\ndef logout_view(request):\n	logout(request)\n	return redirect('login')\n\n#New user page, creates a form to create new user, once new user is created redirects the user to the login page\n#which the user can then immeadiately login\ndef newUser(request):\n	if request.method == \"POST\":\n		form = UserForm(request.POST)\n		if form.is_valid():\n			g = Group.objects.get(name='Users')\n			new_user = User.objects.create_user(**form.cleaned_data)\n			g.user_set.add(new_user)\n			mail.send_mail(\n				'Oak Labs - Supportal: Account ' + str(new_user.username) + ' has been created',\n				'Your account with Supportal has been created. Thank you.',\n				'supportal@oaklabs.io',\n				[str(new_user.email)],\n			)\n			return HttpResponseRedirect(\"/supportal/\")\n	else:\n		form = UserForm()\n\n	return render(request, \"adduser.html\", {\"form\": form})\n\n#*****Need to fix, tries to make new user instead of updating user*****\n@login_required\ndef updateProfile(request):\n	getUser = request.user\n	if not request.user.is_superuser:\n		getbaseUser = baseUser.objects.get(user=getUser)\n	if request.method == 'POST':\n		form = updateUserForm(request.POST, instance=request.user)\n		if form.is_valid():\n			user = form.save(commit=False)\n			user.save()\n			return HttpResponseRedirect(\"/supportal/main\")\n	else:\n		form = updateUserForm()\n\n	if not request.user.is_superuser:\n		context = {\n			\"form\": form,\n			\"current_first\": getUser.first_name,\n			\"current_last\": getUser.last_name,\n			\"current_email\":getUser.email,\n			\"hours_avail\": getbaseUser.time_available,\n		}\n	else:\n		context = {\n			\"form\": form,\n			\"current_first\": getUser.first_name,\n			\"current_last\": getUser.last_name,\n			\"current_email\":getUser.email,\n		}\n	return render(request, 'update_profile.html', context)\n\n#Main page\n@login_required\ndef mainPage(request):\n	context = {\n		\"title\": \"Main\"\n	}\n	return render(request, \"index.html\", context)\n\n\n#View issues, currently gets all issues from a singular repository and displays as a formatted table\n@login_required\ndef viewIssues(request):\n	#lists for issue titles and content\n	bucket_id = []\n	bucket_titles = []\n	bucket_content = []\n	bucket_kind = []\n	bucket_priority = []\n	#call api to get initial repository and find number of issues in said repository\n	r = requests.get(bucket_url)\n	bucket_json = r.json()\n	issue_count = bucket_json['count']\n\n	if request.method == \"POST\":\n		form = deleteForm(request.POST)\n\n		if form.is_valid():\n			bb = Bitbucket('shawdl', 'TF2MarsVolta', repo_name_or_slug=\"supportal2016test\")\n			success, result = bb.issue.delete(issue_id=form.cleaned_data['id_to_be_deleted'])\n	else:\n		form = deleteForm()\n\n	x = 1 #issue counter\n	y = x #id counter\n	while x <= issue_count:\n		#get each individual issue by id\n		r2 = requests.get('https://api.bitbucket.org/1.0/repositories/shawdl/supportal2016test/issues/' + str(y))\n		if r2.text == \"Not Found\":\n			#y is necessary because x = count only counts the number of issues, meaning that it will not reach an id of 7\n			#with a count of 3. Thus, y helps us reach the other ids\n			y += 1\n		else:\n			bucket_issues = r2.json()\n			print(r2.status_code)\n			print(r2.text)\n		#store converted issue titles and content in the appropriate lists, only if the issues have a status of open\n			if bucket_issues['status'] != \"closed\":\n				bucket_id.append(bucket_issues['local_id'])\n				bucket_titles.append(bucket_issues['title'])\n				bucket_content.append(bucket_issues['content'])\n				bucket_kind.append(bucket_issues['metadata']['kind'])\n				bucket_priority.append(bucket_issues['priority'])\n		#Move to next issue\n			x += 1\n			y += 1\n\n	zipped_data = zip(bucket_id, bucket_titles, bucket_content, bucket_kind, bucket_priority)\n	#pass the lists to the template\n	if request.user.is_superuser:\n		context = {\n			\"zipped_data\": zipped_data,\n			\"title\": \"View Issues\",\n			\"bucket_url\": bucket_url,\n			\"form\": form\n		}\n	else:\n		context = {\n			\"zipped_data\": zipped_data,\n			\"title\": \"View Issues\",\n			\"bucket_url\": bucket_url\n		}\n\n	return render(request, \"view_issues.html\", context)\n\n#CREATES ISSUES MOTHERFUCKER WE IN THIS\n@login_required\ndef createIssue(request):\n	if request.method == \"POST\":\n		getUser = request.user\n		form = IssueForm(request.POST)\n\n		if form.is_valid():\n			priority = \"minor\"\n			issue = Issue(**form.cleaned_data)\n			title = form.cleaned_data['title']\n			kind = form.cleaned_data['kind']\n			content = form.cleaned_data['description']\n\n			if issue.highPriority:\n				current_time = datetime.datetime.now().time()\n				users = Developer.objects.all()\n				priority = \"major\"\n				assigned = \"unassigned\"\n				for user in users:\n					if user.oncall_clockin <= current_time <= user.oncall_clockout:\n						assigned = str(user.user)\n					elif user.oncall_clockin > user.oncall_clockout:\n						end = datetime.time(hour=23, minute=59, second=59, microsecond=999999)\n						if user.oncall_clockin <= current_time <= end:\n							assigned = str(user.user)\n						elif current_time <= end:\n							assigned = str(user.user)\n						\n				slack_payload={\n					\"text\": str(getUser) + \" just created a high priority issue:\\n\" + \"*\" + title + \"*\" + \"\\n\" + \">\"\n					+ content + \"\\nAssigned to: @\" + assigned\n				}\n\n				r = requests.post(slack_url, json=slack_payload)\n\n			bb = Bitbucket('shawdl', 'TF2MarsVolta', repo_name_or_slug=\"supportal2016test\")\n			success, result = bb.issue.create(\n				title=u''+title,\n				content=u''+content,\n				priority=u''+priority,\n				responsible=bb.username,\n				status=u'new',\n				kind=u''+kind)\n\n	else:\n		form = IssueForm()\n\n	if request.user.is_superuser:\n		context = {\n			\"form\": form,\n		}\n\n	else:\n		context = {\n			\"form\": form,\n			\"hours_avail\": baseUser.objects.get(user=request.user).time_available,\n		}\n\n	return render(request, \"issue_form.html\", context)",
 			"file": "supportal/firstApp/views.py",
-			"file_size": 7311,
-			"file_write_time": 131250942880095898,
 			"settings":
 			{
-				"buffer_size": 7087,
+				"buffer_size": 6984,
 				"line_ending": "Windows"
 			}
 		},
@@ -162,8 +151,16 @@
 			"file": "supportal/supportal/settings.py",
 			"settings":
 			{
-				"buffer_size": 4110,
+				"buffer_size": 4143,
 				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "supportal/supportal/wsgi.py",
+			"settings":
+			{
+				"buffer_size": 396,
+				"line_ending": "Unix"
 			}
 		}
 	],
@@ -260,7 +257,7 @@
 	],
 	"find":
 	{
-		"height": 34.0
+		"height": 22.0
 	},
 	"find_in_files":
 	{
@@ -294,7 +291,7 @@
 	"groups":
 	[
 		{
-			"selected": 8,
+			"selected": 7,
 			"sheets":
 			[
 				{
@@ -322,41 +319,11 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 7,
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "supportal/supportal/urls.py",
-					"semi_transient": true,
-					"settings":
-					{
-						"buffer_size": 932,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.sublime-syntax",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
 					"file": "supportal/firstApp/models.py",
 					"semi_transient": false,
 					"settings":
@@ -368,8 +335,8 @@
 						"selection":
 						[
 							[
-								589,
-								589
+								940,
+								940
 							]
 						],
 						"settings":
@@ -381,11 +348,11 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 11,
+					"stack_index": 1,
 					"type": "text"
 				},
 				{
-					"buffer": 3,
+					"buffer": 2,
 					"file": "supportal/firstApp/serializers.py",
 					"semi_transient": false,
 					"settings":
@@ -409,11 +376,11 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 12,
+					"stack_index": 2,
 					"type": "text"
 				},
 				{
-					"buffer": 4,
+					"buffer": 3,
 					"file": "supportal/firstApp/templates/update_profile.html",
 					"semi_transient": false,
 					"settings":
@@ -437,11 +404,11 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 8,
+					"stack_index": 3,
 					"type": "text"
 				},
 				{
-					"buffer": 5,
+					"buffer": 4,
 					"file": "supportal/firstApp/forms.py",
 					"semi_transient": false,
 					"settings":
@@ -466,11 +433,11 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 9,
+					"stack_index": 11,
 					"type": "text"
 				},
 				{
-					"buffer": 6,
+					"buffer": 5,
 					"file": "supportal/firstApp/templates/registration/login.html",
 					"semi_transient": false,
 					"settings":
@@ -496,11 +463,11 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 10,
+					"stack_index": 12,
 					"type": "text"
 				},
 				{
-					"buffer": 7,
+					"buffer": 6,
 					"file": "supportal/firstApp/templates/view_issues.html",
 					"semi_transient": false,
 					"settings":
@@ -525,24 +492,24 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 7,
+					"stack_index": 10,
 					"type": "text"
 				},
 				{
-					"buffer": 8,
+					"buffer": 7,
 					"file": "supportal/firstApp/views.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 7087,
+						"buffer_size": 6984,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								6896,
-								6896
+								6499,
+								6499
 							]
 						],
 						"settings":
@@ -551,14 +518,14 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 2600.0,
+						"translation.y": 2342.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
 					"type": "text"
 				},
 				{
-					"buffer": 9,
+					"buffer": 8,
 					"file": "supportal/firstApp/templates/issue_form.html",
 					"semi_transient": false,
 					"settings":
@@ -583,11 +550,11 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 5,
+					"stack_index": 9,
 					"type": "text"
 				},
 				{
-					"buffer": 10,
+					"buffer": 9,
 					"file": "supportal/firstApp/templates/base.html",
 					"semi_transient": false,
 					"settings":
@@ -612,11 +579,11 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 4,
+					"stack_index": 8,
 					"type": "text"
 				},
 				{
-					"buffer": 11,
+					"buffer": 10,
 					"file": "supportal/firstApp/templates/adduser.html",
 					"semi_transient": false,
 					"settings":
@@ -628,8 +595,8 @@
 						"selection":
 						[
 							[
-								564,
-								564
+								1124,
+								1124
 							]
 						],
 						"settings":
@@ -640,24 +607,24 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 3,
+					"stack_index": 4,
 					"type": "text"
 				},
 				{
-					"buffer": 12,
+					"buffer": 11,
 					"file": "supportal/supportal/settings.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 4110,
+						"buffer_size": 4143,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1140,
-								1140
+								869,
+								869
 							]
 						],
 						"settings":
@@ -667,7 +634,35 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 378.0,
+						"translation.y": 135.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 12,
+					"file": "supportal/supportal/wsgi.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 396,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								395,
+								395
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 6,
