@@ -17,7 +17,7 @@ First name: {{ current_first }}<br /><br />
 Last name: {{ current_last }}<br /><br />
 Email: {{ current_email }}<br /><br />
 {% if not request.user.is_superuser %}
-<span title="Current hours available for Oaklabs to work on your requests">Time available: {{ hours_avail }} <small>(?)</small><br /><br /></span>
+<!--<span title="Current hours available for Oaklabs to work on your requests">Time available: {{ hours_avail }} <small>(?)</small><br /><br /></span>-->
 {% endif %}
 <h2>Update Account Information</h2>
 <hr />
