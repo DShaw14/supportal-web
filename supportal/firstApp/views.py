@@ -184,8 +184,6 @@ def createIssue(request):
 						end = datetime.time(hour=23, minute=59, second=59, microsecond=999999)
 						if user.oncall_clockin <= current_time <= end:
 							assigned = str(user.username)
-						elif current_time <= end:
-							assigned = str(user.username)
 						
 				slack_payload={
 					"text": str(getUser) + " just created a high priority issue:\n" + "*" + title + "*" + "\n" + ">"
