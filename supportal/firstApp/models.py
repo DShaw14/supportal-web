@@ -21,10 +21,15 @@ class Issue(models.Model):
 		return self.title
 
 class baseUser(models.Model):
+
 	user = models.OneToOneField(User)
 	time_available = models.DecimalField(max_digits=4, decimal_places=1, default=8)
 
-class Developer(models.Model):
-	user = models.OneToOneField(User)
-	oncall_clockin = models.TimeField(default=None, unique_for_date=True)
-	oncall_clockout = models.TimeField(default=None, unique_for_date=True)
+class OnCallRotation(models.Model):
+
+	username = models.ForeignKey(User)
+	oncall_clockin = models.TimeField(auto_now_add=False)
+	oncall_clockout = models.TimeField(auto_now_add=False)
+
+	def __unicode__(self):
+		return self.username
