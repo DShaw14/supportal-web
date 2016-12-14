@@ -4,6 +4,10 @@ from django.contrib import auth
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required 
 from django.contrib.auth import logout
+from rest_framework import generics
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from firstApp.serializers import IssueSerializer
 from .models import Issue, baseUser, OnCallRotation
 from .forms import IssueForm, UserForm, updateUserForm, deleteForm
 from django.core import mail
@@ -216,3 +220,44 @@ def createIssue(request):
 		}
 
 	return render(request, "issue_form.html", context)
+
+@api_view(['POST'])
+def ApiCreateIssue(request):
+	if request.method == 'POST':
+		title = str(request.data["title"])
+		content = str(request.data["description"])
+		kind = str(request.data["kind"])
+		print(title)
+		print(content)
+		print(kind)
+
+		bb = Bitbucket(bbUser, bbPass, repo_name_or_slug="supportal2016test")
+		success, result = bb.issue.create(
+			title=u''+title,
+			content=u''+content,
+			#priority=u''+priority,
+			responsible=bb.username,
+			status=u'new',
+			kind=u''+kind)
+
+		# if request.highPriority:
+		# 		current_time = datetime.datetime.now().time()
+		# 		users = OnCallRotation.objects.all()
+		# 		priority = "major"
+		# 		assigned = "unassigned"
+		# 		for user in users:
+		# 			if user.oncall_clockin <= current_time <= user.oncall_clockout:
+		# 				assigned = str(user.username)
+		# 			elif user.oncall_clockin > user.oncall_clockout:
+		# 				end = datetime.time(hour=23, minute=59, second=59, microsecond=999999)
+		# 				if user.oncall_clockin <= current_time <= end:
+		# 					assigned = str(user.username)
+						
+		# 		slack_payload={
+		# 			"text": str(getUser) + " just created a high priority issue:\n" + "*" + title + "*" + "\n" + ">"
+		# 			+ content + "\nAssigned to: @" + assigned
+		# 		}
+
+		# 		r = requests.post(slack_url, json=slack_payload)
+
+	return Response({"message": "OK"})

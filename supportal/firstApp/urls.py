@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from firstApp import views as firstapp_views
 from rest_framework_jwt.views import obtain_jwt_token
+from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
 	url(r'^main/$', firstapp_views.mainPage, name='main'),
@@ -18,4 +19,8 @@ urlpatterns = [
     url(r'^password/done/$', auth_views.password_reset_complete),
     url(r'^rest-auth/', include('rest_auth.urls')),
     url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^api/$', firstapp_views.ApiCreateIssue),
 ]
+
+urlpatterns = format_suffix_patterns(urlpatterns)
