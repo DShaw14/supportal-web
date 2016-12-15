@@ -201,7 +201,6 @@ def createIssue(request):
 				title=u''+title,
 				content=u''+content,
 				priority=u''+priority,
-				responsible=bb.username,
 				status=u'new',
 				kind=u''+kind)
 
@@ -227,6 +226,7 @@ def ApiCreateIssue(request):
 		title = str(request.data["title"])
 		content = str(request.data["description"])
 		kind = str(request.data["kind"])
+		priority = str(request.data["priority"])
 		print(title)
 		print(content)
 		print(kind)
@@ -235,29 +235,37 @@ def ApiCreateIssue(request):
 		success, result = bb.issue.create(
 			title=u''+title,
 			content=u''+content,
-			#priority=u''+priority,
-			responsible=bb.username,
+			priority=u''+priority,
 			status=u'new',
 			kind=u''+kind)
 
-		# if request.highPriority:
-		# 		current_time = datetime.datetime.now().time()
-		# 		users = OnCallRotation.objects.all()
-		# 		priority = "major"
-		# 		assigned = "unassigned"
-		# 		for user in users:
-		# 			if user.oncall_clockin <= current_time <= user.oncall_clockout:
-		# 				assigned = str(user.username)
-		# 			elif user.oncall_clockin > user.oncall_clockout:
-		# 				end = datetime.time(hour=23, minute=59, second=59, microsecond=999999)
-		# 				if user.oncall_clockin <= current_time <= end:
-		# 					assigned = str(user.username)
+		if priority == "major":
+		 		current_time = datetime.datetime.now().time()
+		 		users = OnCallRotation.objects.all()
+		 		priority = "major"
+		 		assigned = "unassigned"
+		 		for user in users:
+		 			if user.oncall_clockin <= current_time <= user.oncall_clockout:
+		 				assigned = str(user.username)
+		 			elif user.oncall_clockin > user.oncall_clockout:
+		 				end = datetime.time(hour=23, minute=59, second=59, microsecond=999999)
+		 				if user.oncall_clockin <= current_time <= end:
+		 					assigned = str(user.username)
 						
-		# 		slack_payload={
-		# 			"text": str(getUser) + " just created a high priority issue:\n" + "*" + title + "*" + "\n" + ">"
-		# 			+ content + "\nAssigned to: @" + assigned
-		# 		}
+		 		slack_payload={
+		 			"text": str(getUser) + " just created a high priority issue:\n" + "*" + title + "*" + "\n" + ">"
+		 			+ content + "\nAssigned to: @" + assigned
+		 		}
 
-		# 		r = requests.post(slack_url, json=slack_payload)
+		 		r = requests.post(slack_url, json=slack_payload)
 
 	return Response({"message": "OK"})
+
+@api_view(['POST'])
+def ApiDeleteIssue(request):
+	if request.method == 'POST':
+		issueId = str(request.data["id"])
+		bb = Bitbucket(bbUser, bbPass, repo_name_or_slug="supportal2016test")
+		success, result = bb.issue.delete(issue_id=issueId)
+
+	return Response({"message": "Issue Deleted"})
